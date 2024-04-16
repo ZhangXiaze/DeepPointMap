@@ -1,0 +1,91 @@
+name: DeepPointMap
+version: v1.1
+mode: infer
+num_workers: 8
+use_cuda: true
+
+
+infer_src: [
+  /root/dataset/MulRan_v4.0_NoVisual/KAIST03/0,
+  /root/dataset/MulRan_v4.0_NoVisual/Riverside02/0,
+]
+infer_tgt: ./log_infer/MulRan
+
+transforms:
+  VoxelSample: { voxel_size: 0.3, retention: first }
+  ToGPU: {}
+  DistanceSample: { min_dis: 1.0, max_dis: 60.0 }
+  OutlierFilter: { nb_neighbors: 10, std_ratio: 3.0 }
+  LowPassFilter: { normals_radius: 0.5, normals_num: 16, filter_std: 2.0, flux: 4, max_remain: -1 }
+  CoordinatesNormalization: { ratio: 60.0 }
+  ToCPU: {}
+  ToTensor: { padding_to: -1 }
+
+
+encoder:
+  npoint: [4096, 1024, 256, 64, 16]
+  radius_list: [[0.05, 0.1], [0.1, 0.2], [0.2, 0.4, 0.4], [0.4, 0.8], [0.8, 1.6]]
+  nsample_list: [[32, 32], [32, 32], [32, 32, 32], [32, 32], [16, 16]]
+  in_channel: 3
+  out_channel: 128
+  width: 16
+  expansion: 4
+  upsample_layers: 2
+  sample:
+    [
+      { type: "fps-t3d" },
+      { type: "fps-t3d" },
+      { type: "fps-t3d" },
+      { type: "fps-t3d" },
+      { type: "fps-t3d" },
+    ]
+  norm: LN
+  bias: True
+
+decoder:
+  in_channel: 128
+  model_channel: 256
+  attention_layers: 3
+
+## loss
+loss:
+  tau: 0.1
+  eps_offset: 2.0
+
+# SlamSystem
+slam_system:
+  # Overall
+  coor_scale: 60
+
+  # Odometer
+  odometer_candidates_num: 1
+  registration_sample_odometer: 0.5
+
+  # Mapping
+  edge_confidence_drop: 0.60
+  edge_rmse_drop: 0.50
+  max_continuous_drop_scan: 5
+  continuous_drop_scan_strategy: recover
+  key_frame_distance: auto
+  key_frame_distance_0: 3.0
+
+  enable_s2m_adjust: true # original: backend_loop_m2m_adjust
+  registration_sample_mapping: 0.5
+
+  # Loop
+  enable_loop_closure: true # original: backend_loop_closure
+  loop_detection_gap: 0 # original: backend_loop_time_gap_min
+  loop_detection_transaction_gap: 10.0
+  loop_detection_trust_range: 3 # original: LOOP_NEAREST_GRAPH_DIST
+  loop_detection_gnss_distance: -1 # original: LOOP_MAX_GPS_DIST_THRESHOLD_MAX
+  loop_detection_pred_distance: 100.0 # original: backend_loop_pred_dist_max
+  loop_detection_rotation_min: 30.0 # original: backend_loop_pred_rot_min
+  loop_detection_translation_min: 10.0
+  loop_detection_prob_acpt_threshold: 0.7 # original: backend_loop_threshold
+  loop_detection_candidates_num: 1 # original: backend_loop_edge_per_scan
+  registration_sample_loop: 0.5
+
+  loop_detection_confidence_acpt_threshold: 0.6 # original: LOOP_VERIFY_CONFIDENCE
+  enable_global_optimization: true
+  global_optimization_gap: 0
+  # end

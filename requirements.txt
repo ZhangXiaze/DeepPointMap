@@ -1,0 +1,17 @@
+colorlog==6.7.0
+easydict==1.10
+matplotlib==3.7.3
+networkx==2.8.4
+numpy==1.21.4
+opencv_python==4.8.0.74
+pyquaternion==0.9.9
+PyYAML==6.0.1
+readerwriterlock==1.0.9
+scipy==1.9.1
+std_msgs==0.5.13.post0
+torchvision==0.15.1
+tqdm==4.64.1
+# pytorch3d==0.7.4
+# open3d==0.16.0
+# rospy==1.15.11
+# torch==2.0.0

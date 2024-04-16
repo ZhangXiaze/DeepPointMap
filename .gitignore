@@ -1,0 +1,12 @@
+*.pyc
+__pycache__
+log_*
+runs
+.vscode
+.idea
+*.ffs_db
+*.ffs_lock
+__*
+*.log
+/log_infer/
+/log_train/
